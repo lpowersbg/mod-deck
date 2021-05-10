@@ -53,7 +53,7 @@ deckid = r"\\?\hid#vid_0fd9&pid_006d#7&1d3a520b&0&0000#{4d1e55b2-f16f-11cf-88cb-
 cc1_host = 'wgme-ibm-cc1'
 cc2_host = 'wgme-ibm-cc2'
 
-waci = '10.51.201.101'
+waci = 'http://10.51.201.101/rpc/'
 
 # MonOff, MonOn, VenOn, VenRes, VenOff
 def waci_call(act):
