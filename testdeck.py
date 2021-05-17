@@ -50,8 +50,8 @@ monwall_off_key = [14]
 stat_key_index = [0,1,2,3,4]
 # Deck Settings
 brightness = 50
-deckid1 = r"\\?\hid#vid_0fd9&pid_006d#7&1d3a520b&0&0000#{4d1e55b2-f16f-11cf-88cb-001111000030}"
-deckid2 = r"\\?\hid#vid_0fd9&pid_0060#7&2733624f&0&0000#{4d1e55b2-f16f-11cf-88cb-001111000030}"
+deckid = [r"\\?\hid#vid_0fd9&pid_006d#7&1d3a520b&0&0000#{4d1e55b2-f16f-11cf-88cb-001111000030}",
+r"\\?\hid#vid_0fd9&pid_0060#7&2733624f&0&0000#{4d1e55b2-f16f-11cf-88cb-001111000030}"]
 cc1_host = '10.201.37.151'
 cc2_host = '10.201.37.150'
 
@@ -207,13 +207,17 @@ def key_change_callback(deck, key, state):
 if __name__ == "__main__":
     streamdecks = DeviceManager().enumerate()
     print("Found {} Stream Deck(s).\n".format(len(streamdecks)))
+    decks = []
     for index, deck in enumerate(streamdecks):
         deck.open()
         print("Located '{}' device (serial number: '{}', deck id: '{}')".format(deck.deck_type(), deck.get_serial_number(), deck.id()))
         deck.close()
 
-        if deck.id() == deckid1: deck1 = deck
-        if deck.id() == deckid2: deck2 = deck
+        if deck.id() == deckid1: decks.append(deck)
+        if deck.id() == deckid2: decks.append(deck)
+
+# Dynamic array instead
+
 
     if deck1.id() == deckid1:
         deck1.open()
