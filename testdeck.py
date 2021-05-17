@@ -18,7 +18,7 @@
 import os
 import requests
 import time
-import threading
+# import threading
 
 import watson
 
@@ -50,14 +50,16 @@ monwall_off_key = [14]
 stat_key_index = [0,1,2,3,4]
 # Deck Settings
 brightness = 50
+# Array of all decks - Add new arrays if different category of deck with different buttons
 deckid = [r"\\?\hid#vid_0fd9&pid_006d#7&1d3a520b&0&0000#{4d1e55b2-f16f-11cf-88cb-001111000030}",
 r"\\?\hid#vid_0fd9&pid_0060#7&2733624f&0&0000#{4d1e55b2-f16f-11cf-88cb-001111000030}"]
+# Watsons, DNS does not work on the computer in Master
 cc1_host = '10.201.37.151'
 cc2_host = '10.201.37.150'
 
 waci = 'http://10.51.201.101/rpc/'
 
-# MonOff, MonOn, VenOn, VenRes, VenOff
+# act Options: MonOff, MonOn, VenOn, VenRes, VenOff
 def waci_call(act):
     requests.post(waci, data = {'Param1' : act})
 
@@ -82,8 +84,8 @@ def render_key_image(deck, icon_filename, label_text, key):
 
 
 # Style info for image generator for keys
-# If using two distinct decks, add a deck argument to allow for different layouts
-# on different decks, and a state argument to change image for press/unpressed.
+# If using two distinct deck sets, add a deck argument to allow for different layouts
+# on different decks. Also can use a state argument to change image for press/unpressed.
 def get_key_style(key, stat1=None, stat2=None):
     font = 'Roboto-Regular.ttf'
 
@@ -163,8 +165,9 @@ def update_key_image(deck, key, stat1=None, stat2=None):
 def update_cc_stat():
     stat1 = watson.api_con(cc1_host)
     stat2 = watson.api_con(cc2_host)
-    for i in cc1_key_index: update_key_image(deck, i, stat1, stat2)
-    for i in cc2_key_index: update_key_image(deck, i, stat1, stat2)
+    for deck in decks:
+        for i in cc1_key_index: update_key_image(deck, i, stat1, stat2)
+        for i in cc2_key_index: update_key_image(deck, i, stat1, stat2)
 
 # Update the key image, then run any corresponding actions.
 def key_change_callback(deck, key, state):
@@ -185,46 +188,53 @@ def key_change_callback(deck, key, state):
         if key in exit_key_index:
             # Ensure nothing else using deck
             with deck:
-                deck.reset()
+                for deck in decks:
+                    deck.reset()
                 # Update deck to show the CC launch image after resetting
-                update_key_image(deck, launch_key)
-                deck.close()
+                for deck in decks:
+                    update_key_image(deck, launch_key)
+                for deck in decks:
+                    deck.close()
 
 if __name__ == "__main__":
+    # List total Streamdecks connected
     streamdecks = DeviceManager().enumerate()
     print("Found {} Stream Deck(s).\n".format(len(streamdecks)))
+    
+    # For multiple deck categories, repeat this for each category. Searches deckid list for matching decks and adds them to the category array.
+    decks = []
     for index, deck in enumerate(streamdecks):
         deck.open()
         print("Located '{}' device (serial number: '{}', deck id: '{}')".format(deck.deck_type(), deck.get_serial_number(), deck.id()))
         deck.close()
-        if deck.id() in deckid:
-            deck.open()
-            deck.reset()
+        if deck.id() in deckid: decks.append(deck)
 
-            print("Opened '{}' device (serial number: '{}')".format(deck.deck_type(), deck.get_serial_number()))
+    # Initialize each deck in category.
+    for deck in decks:
+        deck.open()
+        deck.reset()
+        print("Opened '{}' device (serial number: '{}')".format(deck.deck_type(), deck.get_serial_number()))
+        deck.set_brightness(brightness)
+        stat1 = watson.api_con(cc1_host)
+        stat2 = watson.api_con(cc2_host)
+        for key in range(deck.key_count()):
+            update_key_image(deck, key, stat1, stat2)
+        deck.set_key_callback(key_change_callback)        
 
-            # Screen brightness and image initialization
-            deck.set_brightness(brightness)
-            stat1 = watson.api_con(cc1_host)
-            stat2 = watson.api_con(cc2_host)
-            for key in range(deck.key_count()):
-                update_key_image(deck, key, stat1, stat2)
-
-            # Function to run on key press
-            deck.set_key_callback(key_change_callback)
-
-            # Wait for all threads to end.
-            for t in threading.enumerate():
-                if t is threading.currentThread():
-                    continue
-                if t.is_alive():
-                    t.join()
-            
     print ("I'm Freeeeeeee")    
     # Update status images every second
     while True:
         update_cc_stat()
         time.sleep(1)
+
+    # Wait for all threads to end.
+    # for t in threading.enumerate():
+    #     if t is threading.currentThread():
+    #         continue
+    #     if t.is_alive():
+    #         t.join()
+            
+    
 
 # Python-Elgato-Streamdeck used under MIT license:
 #
