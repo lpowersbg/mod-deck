@@ -50,8 +50,8 @@ monwall_off_key = [14]
 stat_key_index = [0,1,2,3,4]
 # Deck Settings
 brightness = 50
-deckid = [r"\\?\hid#vid_0fd9&pid_006d#7&1d3a520b&0&0000#{4d1e55b2-f16f-11cf-88cb-001111000030}",
-r"\\?\hid#vid_0fd9&pid_0060#7&2733624f&0&0000#{4d1e55b2-f16f-11cf-88cb-001111000030}"]
+deckid1 = r"\\?\hid#vid_0fd9&pid_006d#7&1d3a520b&0&0000#{4d1e55b2-f16f-11cf-88cb-001111000030}"
+deckid2 = r"\\?\hid#vid_0fd9&pid_0060#7&2733624f&0&0000#{4d1e55b2-f16f-11cf-88cb-001111000030}"
 cc1_host = '10.201.37.151'
 cc2_host = '10.201.37.150'
 
@@ -163,8 +163,10 @@ def update_key_image(deck, key, stat1=None, stat2=None):
 def update_cc_stat():
     stat1 = watson.api_con(cc1_host)
     stat2 = watson.api_con(cc2_host)
-    for i in cc1_key_index: update_key_image(deck, i, stat1, stat2)
-    for i in cc2_key_index: update_key_image(deck, i, stat1, stat2)
+    for i in cc1_key_index: update_key_image(deck1, i, stat1, stat2)
+    for i in cc2_key_index: update_key_image(deck1, i, stat1, stat2)
+    for i in cc1_key_index: update_key_image(deck2, i, stat1, stat2)
+    for i in cc2_key_index: update_key_image(deck2, i, stat1, stat2)
 
 # Update the key image, then run any corresponding actions.
 def key_change_callback(deck, key, state):
@@ -197,28 +199,32 @@ if __name__ == "__main__":
         deck.open()
         print("Located '{}' device (serial number: '{}', deck id: '{}')".format(deck.deck_type(), deck.get_serial_number(), deck.id()))
         deck.close()
-        if deck.id() in deckid:
-            deck.open()
-            deck.reset()
 
-            print("Opened '{}' device (serial number: '{}')".format(deck.deck_type(), deck.get_serial_number()))
+        if deck.id() == deckid1: deck1 = deck
+        if deck.id() == deckid2: deck2 = deck
 
-            # Screen brightness and image initialization
-            deck.set_brightness(brightness)
-            stat1 = watson.api_con(cc1_host)
-            stat2 = watson.api_con(cc2_host)
-            for key in range(deck.key_count()):
-                update_key_image(deck, key, stat1, stat2)
+    if deck.id() in deckid:
+        deck.open()
+        deck.reset()
 
-            # Function to run on key press
-            deck.set_key_callback(key_change_callback)
+        print("Opened '{}' device (serial number: '{}')".format(deck.deck_type(), deck.get_serial_number()))
 
-            # Wait for all threads to end.
-            for t in threading.enumerate():
-                if t is threading.currentThread():
-                    continue
-                if t.is_alive():
-                    t.join()
+        # Screen brightness and image initialization
+        deck.set_brightness(brightness)
+        stat1 = watson.api_con(cc1_host)
+        stat2 = watson.api_con(cc2_host)
+        for key in range(deck.key_count()):
+            update_key_image(deck, key, stat1, stat2)
+
+        # Function to run on key press
+        deck.set_key_callback(key_change_callback)
+
+        # Wait for all threads to end.
+        #for t in threading.enumerate():
+        #    if t is threading.currentThread():
+        #        continue
+        #    if t.is_alive():
+        #        t.join()
             
     print ("I'm Freeeeeeee")    
     # Update status images every second
