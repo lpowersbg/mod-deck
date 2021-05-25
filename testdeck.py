@@ -26,6 +26,8 @@ from PIL import Image, ImageDraw, ImageFont
 from StreamDeck.DeviceManager import DeviceManager
 from StreamDeck.ImageHelpers import PILHelper
 
+# Keys as classes instead?
+
 # Image locations
 ASSETS_PATH = os.path.join(os.path.dirname(__file__), 'Assets')
 # Key Location Settings
